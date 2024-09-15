@@ -19,8 +19,8 @@ for i in x.columns:
 # normalize the data
 mean = x.mean()
 std = x.std()
+x_ = (x - mean)/std
 
-x_ = x - mean
 
 cov_matrix = x_.T.dot(x_) / (x_.shape[0] - 1)
 
@@ -35,23 +35,26 @@ new_vecs = eigen_vectors[:, idx[:2]]
 # print(new_vals)
 # print(new_vecs)
 
-PCA_vals = x.dot(new_vecs)
+PCA_vals = x_.dot(new_vecs)
+PCA_vals.to_csv('PCA.csv')
 
-plt.scatter(PCA_vals.iloc[:, 0], PCA_vals.iloc[:, 1])
+plt.scatter(PCA_vals.iloc[:, 0], PCA_vals.iloc[:, 1], c=y.map({'Iris-setosa': 0, 'Iris-versicolor': 1, 'Iris-virginica': 2}))
+plt.xlabel('PCA1')
+plt.ylabel('PCA2')
+plt.title('PCA')
+plt.grid()
 
 # superimpose scaled eigendirections
 for i in range(2):
-    plt.arrow(0, 0, new_vecs[i, 0]*new_vals[i], new_vecs[i, 1]*new_vals[i], head_width=0.1, head_length=0.1, fc='r', ec='r')
+    plt.arrow(0, 0, new_vecs[i, 0]*new_vals[i], new_vecs[i, 1]*new_vals[i], head_width=0.1, head_length=0.1)
 
 plt.show()
 
-PCA_vals.to_csv('PCA.csv')
 # Reconstruction
-
 x_re = PCA_vals.dot(new_vecs.T)
+x_re = x_re*std.values + mean.values
 
-# find rmse
-
+# find rmse for each feature
 x.columns = [0, 1, 2, 3]
 
 def rmse(y_true, y_pred):
@@ -62,6 +65,7 @@ def rmse(y_true, y_pred):
 
 
 rmseval = 0
+print('RMSE values for each feature:')
 for i in x.columns:
     rmseval = rmse(x[i], x_re[i])
     print(rmseval)
