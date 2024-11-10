@@ -31,7 +31,7 @@ cf_matrix = confusion_matrix(y_test, y_pred)
 # Plot the confusion matrix
 import matplotlib.pyplot as plt
 
-plt.imshow(cf_matrix, cmap='Blues', interpolation='nearest')
+plt.imshow(cf_matrix, cmap='coolwarm')
 
 # Add text on image
 for i in range(len(cf_matrix)):

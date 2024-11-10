@@ -33,8 +33,8 @@ def I_1(df: pd.DataFrame):
     The statistical measures of Temperature attribute are: 
     mean=\t{mean_temp:.2f},
     median=\t{median_temp:.2f},
-    maximum={min_temp:.2f}, 
-    minimum={max_temp:.2f}, 
+    maximum=\t{min_temp:.2f}, 
+    minimum=\t{max_temp:.2f}, 
     STD=\t{std_dev_temp:.2f}.
     ''')
 
@@ -57,7 +57,7 @@ def I_2(df: pd.DataFrame):
 
     l_avg = corr_df.loc[:, 'lightavg']
     # between 0.6 and 1
-    print("Redundant Attributes wrt lightavg: ", l_avg[(l_avg >= 0.6) & (l_avg < 1)].index.to_list())
+    print("Redundant Attributes wrt lightavg: ", l_avg[(abs(l_avg) >= 0.6) & (abs(l_avg) < 1)].index.to_list())
 
 def I_3(df: pd.DataFrame):
     t12_humidity = df[df['stationid'] == 't12']['humidity'].to_numpy()
@@ -86,13 +86,12 @@ def II_1(df: pd.DataFrame, display: bool=True):
     # df.reset_index(drop=True, inplace=True)  # to reset index - otherwise index will have missing values
     if display:
         print(df.to_string())
+        df.to_csv('replaced_df.csv')
 
 def II_2(df: pd.DataFrame, display: bool=True):
     II_1(df, False)
     indices = df.index
-
-    # df = df.loc[:30, :]
-    # print(df.to_string())
+    # indices = iter(df.index)
 
     prev_index = -1
     for idx, row in df.iterrows():
@@ -109,14 +108,13 @@ def II_2(df: pd.DataFrame, display: bool=True):
                 prev_date = datetime.date(*map(int, df.loc[prev_index, 'dates'].split('-')[::-1]))
             
             next_idx = idx+1
-            while next_idx < len(df) and next_idx not in indices:
-                next_idx += 1
-
-            # print(prev_index, idx, next_idx)
-
-            while next_idx not in indices or pd.isnull(df.loc[next_idx, col]):
+            while next_idx < len(df) and (next_idx not in indices or pd.isnull(df.loc[next_idx, col])):
                 next_idx += 1
             
+            # next_idx = next(indices, None)
+            # while next_idx is not None and pd.isnull(df.loc[next_idx, col]):
+            #     next_idx = next(indices, None)
+
 
             if next_idx >= len(df) or df.loc[idx, 'stationid'] != df.loc[next_idx, 'stationid']:
                 next_val = None
@@ -157,10 +155,17 @@ def II_2(df: pd.DataFrame, display: bool=True):
 
     print("Stats from file with missing data: \n", miss_stats.to_string())
 
+    # np.set_printoptions(precision=3, threshold=np.inf, suppress=True)
+    # (np.hstack([np.reshape(ori_df.loc[df.index, 'lightavg'], (-1, 1)), np.reshape(df.loc[:, 'lightavg'], (-1, 1))]))
+    # for i in df.index:
+    #     if ori_df.loc[i, 'lightavg'] != df.loc[i, 'lightavg']:
+    #         print(i, ori_df.loc[i, 'lightavg'], df.loc[i, 'lightavg'])
 
     rmse_vals = dict()
     for col in attributes:
         rmse_vals[col] = rmse(ori_df.loc[:, col], df.loc[:, col])
+    
+    print(rmse_vals)
     
     plt.bar(rmse_vals.keys(), rmse_vals.values())
     plt.xlabel('Attributes')
@@ -259,13 +264,13 @@ def IV_2(df: pd.DataFrame):
         _temp = df.loc[:, col].to_numpy()
         df.loc[:, col] = (_temp - np.mean(_temp))/np.std(_temp)
     
+    np.set_printoptions(precision=5, suppress=True)
     print("After normalization: \n", df.describe())
 
 
 if __name__ == '__main__':
     df = pd.read_csv('landslide_data_original.csv')
-    
     # I_3(df)
     df = pd.read_csv('landslide_data_miss.csv')
-
-    IV_2(df)
+    # III_1(df)
+    IV_1(df)

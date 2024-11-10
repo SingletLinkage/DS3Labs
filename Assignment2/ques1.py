@@ -32,9 +32,6 @@ eigen_values = eigen_values[idx]
 new_vals = eigen_values[:2]
 new_vecs = eigen_vectors[:, idx[:2]]
 
-# print(new_vals)
-# print(new_vecs)
-
 PCA_vals = x_.dot(new_vecs)
 PCA_vals.to_csv('PCA.csv')
 
@@ -44,9 +41,18 @@ plt.ylabel('PCA2')
 plt.title('PCA')
 plt.grid()
 
+# reduce dimension of new_vecs to 2 using PCA
+print(new_vecs)
+C = new_vecs.dot(new_vecs.T).T/(new_vecs.shape[0]-1)
+
+eigen_values, eigen_vectors = np.linalg.eig(C)
+idx = np.argsort(eigen_values)[::-1]
+_vecs = eigen_vectors[:, idx[:2]]
+C=new_vecs.T.dot(_vecs)
+print(f'{_vecs=}\n{C=}')
 # superimpose scaled eigendirections
 for i in range(2):
-    plt.arrow(0, 0, new_vecs[i, 0]*new_vals[i], new_vecs[i, 1]*new_vals[i], head_width=0.1, head_length=0.1)
+    plt.quiver(0, 0, C[i][0]*new_vals[i], C[i][1]*new_vals[i], angles='xy', scale_units='xy', scale=1)
 
 plt.show()
 
